@@ -5,6 +5,7 @@ import requests
 
 load_dotenv()
 API_KEY = os.getenv("OPENWEATHER_API_KEY")
+FILE = "history_data.json"
 
 def fetchWeather(city):
     url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
@@ -14,11 +15,12 @@ def fetchWeather(city):
             data = response.json()
 
             weather_data = {
-                "city": data.get("name"),
-                "temp": data["main"]["temp"],
-                "humidity": data["main"]["humidity"],
-                "wind_speed": data["wind"]["speed"],
-                "description": data["weather"][0]["description"],
+                "City": data.get("name"),
+                "Temperature (°C)": data["main"]["temp"],
+                "Humidity %": data["main"]["humidity"],
+                # converting m/s to km/hr
+                "Wind_speed (Km/hr)": (data["wind"]["speed"])*3.6,
+                "Description": data["weather"][0]["description"],
                 "lat": data["coord"]["lat"],
                 "lon": data["coord"]["lon"]
             }
@@ -42,8 +44,8 @@ def fetchAQI(lat,lon):
         response = requests.get(url)
         if response.status_code == 200:
             data = response.json()
-            aqi = ["Good (1)", "Fair (2)", "Moderate (3)", "Poor (4)", "Very Poor (5)"]
-            return aqi[(data["list"][0]["main"]["aqi"])-1]
+            
+            return (data["list"][0]["main"]["aqi"])
         else:
             print(f"API Error: Status code {response.status_code}")
             return None
@@ -55,7 +57,48 @@ def fetchAQI(lat,lon):
 def fetchData(city):
     weather_data = fetchWeather(city)
     aqi = fetchAQI(weather_data["lat"],weather_data["lon"])
+    aqi_status = ["Good", "Fair", "Moderate", "Poor", "Very Poor"]
+    advisory = [
+                'Air quality is satisfactory.', 
+                'Air quality is acceptable.', 
+                'Sensitive individuals should reduce outdoor activity.', 
+                'Avoid prolonged outdoor exertion.', 
+                'Stay indoors if possible.'
+                ]
+    
     weather_data["AQI"]=aqi
+    weather_data["AQI Status"]=aqi_status[aqi-1]
+    weather_data["Advisory"] = advisory[aqi-1]
     return weather_data
 
-print(fetchData("Delhi"))
+def historyData(FILE):
+    if os.path.exists(FILE):
+        try:
+            with open(FILE, "r") as file:
+                return json.load(file)
+        except json.JSONDecodeError:
+            return []
+    return []
+
+def saveHistory(FILE,weather_data):
+    history = historyData(FILE)
+
+    history.append(weather_data)
+    history = history[-5:]
+
+    with open(FILE, "w") as file:
+       json.dump(history,file,indent=3)
+
+def display(data):
+    print(f"{' Weather Data ':=^82}")
+    print("X","="*78,"X")
+    for obj in data:
+        for key in obj:
+            if key != "lat" and key != "lon":
+                if isinstance(obj[key], float):
+                    str = f"| {key:<20}: {obj[key]:.2f}"
+                    print(f"{str:<80} |")
+                else:
+                    str = f"| {key:<20}: {obj[key]}"
+                    print(f"{str:<80} |")
+        print("X","="*78,"X")
