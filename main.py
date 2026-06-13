@@ -28,7 +28,7 @@ def fetchWeather(city):
             return weather_data
             
         elif response.status_code == 404:
-            print(f"Error: City '{city}' not found. Please check the spelling.")
+            print(f"| ***Error: City '{city}' not found. Please check the spelling.***")
             return None
         else:
             print(f"API Error: Status code {response.status_code}")
@@ -44,7 +44,6 @@ def fetchAQI(lat,lon):
         response = requests.get(url)
         if response.status_code == 200:
             data = response.json()
-            
             return (data["list"][0]["main"]["aqi"])
         else:
             print(f"API Error: Status code {response.status_code}")
@@ -56,20 +55,23 @@ def fetchAQI(lat,lon):
 
 def fetchData(city):
     weather_data = fetchWeather(city)
-    aqi = fetchAQI(weather_data["lat"],weather_data["lon"])
-    aqi_status = ["Good", "Fair", "Moderate", "Poor", "Very Poor"]
-    advisory = [
-                'Air quality is satisfactory.', 
-                'Air quality is acceptable.', 
-                'Sensitive individuals should reduce outdoor activity.', 
-                'Avoid prolonged outdoor exertion.', 
-                'Stay indoors if possible.'
-                ]
+    if not (weather_data is None):
+        aqi = fetchAQI(weather_data["lat"],weather_data["lon"])
+        aqi_status = ["Good", "Fair", "Moderate", "Poor", "Very Poor"]
+        advisory = [
+                    'Air quality is satisfactory.', 
+                    'Air quality is acceptable.', 
+                    'Sensitive individuals should reduce outdoor activity.', 
+                    'Avoid prolonged outdoor exertion.', 
+                    'Stay indoors if possible.'
+                    ]
     
-    weather_data["AQI"]=aqi
-    weather_data["AQI Status"]=aqi_status[aqi-1]
-    weather_data["Advisory"] = advisory[aqi-1]
-    return weather_data
+        weather_data["AQI"]=aqi
+        weather_data["AQI Status"]=aqi_status[aqi-1]
+        weather_data["Advisory"] = advisory[aqi-1]
+        return weather_data
+    else:
+        return None
 
 def historyData(FILE):
     if os.path.exists(FILE):
@@ -90,7 +92,7 @@ def saveHistory(FILE,weather_data):
        json.dump(history,file,indent=3)
 
 def display(data):
-    print(f"{' Weather Data ':=^82}")
+    print(f"{' Current Weather Data ':=^82}")
     print("X","="*78,"X")
     for obj in data:
         for key in obj:
@@ -102,3 +104,36 @@ def display(data):
                     str = f"| {key:<20}: {obj[key]}"
                     print(f"{str:<80} |")
         print("X","="*78,"X")
+
+def main():
+    print(f"\n{' Weather & Air Quality CLI Dashboard ':=^82}\n")
+    if historyData(FILE):
+        print(f"{' Previous Searched Cities ':*^82}")
+        display(historyData(FILE))
+    else:
+        print(f"{' Previous Searched Cities ':*^82}")
+        print(f"{' NO PREVIOUS DATA ':*^82}")
+    choice = "n"
+    while True:
+        print(f"\n{' Weather & Air Quality CLI Dashboard ':=^82}\n|")
+        print("| What do you want to do? \n|=>Enter the city name to see current weather. \n|=>Type 'History' to see previous searched cities. \n|=>Want to exit enter 'y'\n|")
+        
+        choice = input("| Type Here : ").lower().strip()
+        print("|")
+
+        if choice == "history":
+            if historyData(FILE):
+                print(f"{' Previous Cities Searched ':*^82}")
+                display(historyData(FILE))
+            else:
+                print(f"{' Previous Cities Searched ':*^82}")
+                print(f"{' NO PREVIOUS DATA ':*^82}")
+        elif choice == "y":
+            break
+        else:
+            data = fetchData(choice)
+            if not(data is None):
+                display([fetchData(choice)])
+                saveHistory(FILE,fetchData(choice))
+if __name__=="__main__":
+    main()
