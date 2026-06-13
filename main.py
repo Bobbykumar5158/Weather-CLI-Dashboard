@@ -6,7 +6,7 @@ import requests
 load_dotenv()
 API_KEY = os.getenv("OPENWEATHER_API_KEY")
 
-def fetchData(city):
+def fetchWeather(city):
     url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
     try :
         response = requests.get(url)
@@ -35,3 +35,27 @@ def fetchData(city):
     except requests.exceptions.ConnectionError:
         print("Network Error: Could not connect to the internet.")
         return None
+
+def fetchAQI(lat,lon):
+    url = f"http://api.openweathermap.org/data/2.5/air_pollution?lat={lat}&lon={lon}&appid={API_KEY}"
+    try :
+        response = requests.get(url)
+        if response.status_code == 200:
+            data = response.json()
+            aqi = ["Good (1)", "Fair (2)", "Moderate (3)", "Poor (4)", "Very Poor (5)"]
+            return aqi[(data["list"][0]["main"]["aqi"])-1]
+        else:
+            print(f"API Error: Status code {response.status_code}")
+            return None
+            
+    except requests.exceptions.ConnectionError:
+        print("Network Error: Could not connect to the internet.")
+        return None
+
+def fetchData(city):
+    weather_data = fetchWeather(city)
+    aqi = fetchAQI(weather_data["lat"],weather_data["lon"])
+    weather_data["AQI"]=aqi
+    return weather_data
+
+print(fetchData("Delhi"))
