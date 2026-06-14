@@ -92,7 +92,6 @@ def saveHistory(FILE,weather_data):
        json.dump(history,file,indent=3)
 
 def display(data):
-    print(f"{' Current Weather Data ':=^82}")
     print("X","="*78,"X")
     for obj in data:
         for key in obj:
@@ -108,12 +107,12 @@ def display(data):
 def main():
     print(f"\n{' Weather & Air Quality CLI Dashboard ':=^82}\n")
     if historyData(FILE):
-        print(f"{' Previous Searched Cities ':*^82}")
-        display(historyData(FILE))
+        print(f"{' Previously Searched City ':*^82}")
+        print(f"| {historyData(FILE)[-1]['City']:<80}|")
     else:
-        print(f"{' Previous Searched Cities ':*^82}")
+        print(f"{' Previous Searched City ':*^82}")
         print(f"{' NO PREVIOUS DATA ':*^82}")
-    choice = "n"
+
     while True:
         print(f"\n{' Weather & Air Quality CLI Dashboard ':=^82}\n|")
         print("| What do you want to do? \n|=>Enter the city name to see current weather. \n|=>Type 'History' to see previous searched cities. \n|=>Want to exit enter 'y'\n|")
@@ -123,16 +122,17 @@ def main():
 
         if choice == "history":
             if historyData(FILE):
-                print(f"{' Previous Cities Searched ':*^82}")
+                print(f"{' Previously Searched Cities ':*^82}")
                 display(historyData(FILE))
             else:
-                print(f"{' Previous Cities Searched ':*^82}")
+                print(f"{' Previously Searched Cities':*^82}")
                 print(f"{' NO PREVIOUS DATA ':*^82}")
         elif choice == "y":
             break
         else:
             data = fetchData(choice)
             if not(data is None):
+                print(f"{' Current Weather ':=^82}")
                 display([fetchData(choice)])
                 saveHistory(FILE,fetchData(choice))
 if __name__=="__main__":
