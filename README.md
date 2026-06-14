@@ -106,9 +106,10 @@ python main.py
 |=>Type 'History' to see previous searched cities. 
 |=>Want to exit enter 'y'
 |
-| Type Here :Delhi ```
+| Type Here :Delhi 
+```
 
-## Example Output
+# Example Output
 
 ```bash
 ================================ Current Weather =================================
