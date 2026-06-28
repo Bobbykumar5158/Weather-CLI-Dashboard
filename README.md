@@ -50,7 +50,7 @@ Weather-CLI-Dashboard/
 ## Clone the Repository
 
 ```bash
-git clone <your_repository_link>
+git clone https://github.com/Bobbykumar5158/Weather-CLI-Dashboard
 ```
 
 ## Open Project Folder
